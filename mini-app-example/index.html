@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFlix Content Browser</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000);
+            padding: 16px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--tg-theme-secondary-bg-color, #e0e0e0);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: var(--tg-theme-text-color, #000);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 80px;
+        }
+
+        .content-card {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--tg-theme-secondary-bg-color, #e0e0e0);
+        }
+
+        .content-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-card:active {
+            transform: translateY(-2px);
+        }
+
+        .content-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .content-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .content-type {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #f44336;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-theme-bg-color, #fff);
+            padding: 16px;
+            text-align: center;
+            border-top: 1px solid var(--tg-theme-secondary-bg-color, #e0e0e0);
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎬 CineFlix</h1>
+        <p>Select your content</p>
+    </div>
+
+    <div id="content-container">
+        <div class="loading">Loading content...</div>
+    </div>
+
+    <div class="footer">
+        <p class="footer-text">Powered by CineFlix Bot</p>
+    </div>
+
+    <script>
+        // Initialize Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Sample content data (In production, fetch from Google Sheets API)
+        const sampleContents = [
+            {
+                name: "Movie 1",
+                copyId: "abc123",
+                type: "video",
+                icon: "🎬"
+            },
+            {
+                name: "Movie 2",
+                copyId: "xyz789",
+                type: "video",
+                icon: "🎥"
+            },
+            {
+                name: "YouTube Link",
+                copyId: "yt001",
+                type: "link",
+                icon: "▶️"
+            },
+            {
+                name: "Drive File",
+                copyId: "drv002",
+                type: "link",
+                icon: "📁"
+            }
+        ];
+
+        // Bot username (replace with your bot username)
+        const BOT_USERNAME = "Cinaflix_Streembot";
+
+        // Render content
+        function renderContent(contents) {
+            const container = document.getElementById('content-container');
+            
+            if (contents.length === 0) {
+                container.innerHTML = '<div class="error">No content available</div>';
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'content-grid';
+
+            contents.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'content-card';
+                card.onclick = () => openContent(item.copyId);
+
+                card.innerHTML = `
+                    <div class="content-icon">${item.icon}</div>
+                    <div class="content-title">${item.name}</div>
+                    <div class="content-type">${item.type}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        // Open content in bot
+        function openContent(copyId) {
+            const deepLink = `https://t.me/${BOT_USERNAME}?start=content_${copyId}`;
+            
+            // Haptic feedback
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            // Open bot with deep link
+            tg.openTelegramLink(deepLink);
+        }
+
+        // Load content from Google Sheets (Example function)
+        async function loadFromGoogleSheets() {
+            try {
+                // Replace with your Google Sheets API endpoint
+                // const response = await fetch('YOUR_GOOGLE_SHEETS_API_URL');
+                // const data = await response.json();
+                // return data;
+
+                // For now, return sample data
+                return sampleContents;
+            } catch (error) {
+                console.error('Error loading content:', error);
+                return [];
+            }
+        }
+
+        // Initialize app
+        async function init() {
+            try {
+                // Load content
+                const contents = await loadFromGoogleSheets();
+                
+                // Render
+                renderContent(contents);
+
+                // Set theme
+                document.body.style.backgroundColor = tg.backgroundColor || '#f5f5f5';
+                
+                // Ready
+                tg.ready();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                document.getElementById('content-container').innerHTML = 
+                    '<div class="error">Failed to load content</div>';
+            }
+        }
+
+        // Start app
+        init();
+    </script>
+</body>
+</html>
