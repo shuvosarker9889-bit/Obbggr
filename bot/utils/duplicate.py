@@ -10,8 +10,11 @@ from pyrogram.errors import MessageDeleteForbidden, MessageIdInvalid
 from bot.database import (
     check_already_delivered,
     mark_as_delivered,
-    remove_previous_delivery
+    remove_previous_delivery,
+    database,
+    get_user_deliveries
 )
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +93,6 @@ async def should_send_content(user_id: int, copy_id: str) -> Tuple[bool, str]:
     Returns:
         (should_send, reason)
     """
-    from typing import Tuple
-    
     try:
         already_delivered = await check_already_delivered(user_id, copy_id)
         
@@ -117,8 +118,6 @@ async def cleanup_old_deliveries(user_id: int, keep_last: int = 100):
         keep_last: Number of recent deliveries to keep
     """
     try:
-        from bot.database import database, get_user_deliveries
-        
         # Get all deliveries for user
         deliveries = await get_user_deliveries(user_id, limit=1000)
         
@@ -147,8 +146,6 @@ async def get_duplicate_stats() -> dict:
     Useful for admin monitoring
     """
     try:
-        from bot.database import database
-        
         # Total deliveries
         total = await database.user_deliveries.count_documents({})
         
